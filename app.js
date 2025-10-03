@@ -1,4 +1,4 @@
-  // Wait for the DOM to be ready
+// Wait for the DOM to be ready
         document.addEventListener('DOMContentLoaded', () => {
 
             //==================================================================
@@ -980,255 +980,176 @@
             
             Store.subscribe(updatePlayer);
 
-            // ... Rest of your existing UI code remains the same ...
-            const UI = {
-                songToAdd: null,
-                createListItem(song, state, options = {}) {
-                    const isFavorited = state.favorites.some(fav => fav.id === song.id);
-                    const { isPlaylistView = false, playlistId = null } = options;
-                    
-                    // Check if song was already played (for visual indication)
-                    const wasPlayed = smartAutoplay.isSongPlayed(song);
-                    const playedIndicator = wasPlayed ? '<span class="text-xs text-neutral-500 ml-2">• Played</span>' : '';
-                    
-                    // Show detected language/genre/decade for debug
-                    const detectedLang = smartAutoplay.detectLanguage(song);
-                    const detectedGenres = smartAutoplay.detectGenres(song);
-                    const detectedDecade = smartAutoplay.detectDecade(song);
-                    
-                    let genreIndicator = '';
-                    if (detectedLang || detectedGenres.length > 0 || detectedDecade) {
-                        const parts = [];
-                        if (detectedLang) parts.push(detectedLang);
-                        if (detectedDecade) parts.push(detectedDecade);
-                        if (detectedGenres.length > 0) parts.push(detectedGenres[0]);
-                        genreIndicator = `<span class="text-xs text-blue-400 ml-1">${parts.join(' • ')}</span>`;
-                    }
-                    
-                    return `
-                        <div class="list-item flex items-center gap-4 cursor-pointer p-2 rounded-lg transition-colors hover:bg-neutral-800 ${wasPlayed ? 'opacity-75' : ''}" data-song-id="${song.id}" ${playlistId ? `data-playlist-id="${playlistId}"` : ''}>
-                            <img src="${song.artwork}" alt="${song.title}" class="w-12 h-12 rounded object-cover">
-                            <div class="flex-grow overflow-hidden">
-                                <div class="font-medium whitespace-nowrap overflow-hidden text-ellipsis">${song.title}${playedIndicator}${genreIndicator}</div>
-                                <div class="text-neutral-400 text-sm">${song.artist}</div>
-                            </div>
-                             ${isPlaylistView ? `
-                                <button class="remove-from-playlist-btn text-neutral-400 text-2xl p-2 hover:text-red-500" data-song-id="${song.id}"><i class="ph-duotone ph-trash"></i></button>
-                            ` : `
-                                <button class="add-to-playlist-btn text-neutral-400 text-2xl p-2" data-song-id="${song.id}"><i class="ph-duotone ph-dots-three"></i></button>
-                            `}
-                            <button class="favorite-btn ${isFavorited ? 'text-brand-accent' : 'text-neutral-400'} text-2xl transition-colors duration-200" data-song-id="${song.id}">
-                                <i class="ph-duotone ph-heart"></i>
-                            </button>
-                        </div>
-                    `;
-                },
-                createSearchSkeletonLoader() {
-                    const skeletonItem = `<div class="skeleton-item relative overflow-hidden bg-neutral-800 rounded-md"><div class="shine"></div></div>`;
-                    const listItem = `<div class="flex items-center gap-4 mb-4 p-2"><div class="w-12 h-12">${skeletonItem}</div><div class="flex-grow"><div class="h-5 mb-2">${skeletonItem}</div><div class="h-4 w-1/2">${skeletonItem}</div></div></div>`;
-                    return Array(6).fill(listItem).join('');
-                },
-                renderHomeScreen() {
-                    document.getElementById('greeting').innerHTML = getGreeting();
-                },
-                renderSearchResults(results, query) {
-                    const state = Store.getState();
-                    searchResultsContainer.innerHTML = results.length > 0 
-                        ? results.map(song => this.createListItem(song, state)).join('') 
-                        : `<p class="text-center text-neutral-400 p-8">No results found for "${query}".</p>`;
-                    addListEventListeners(searchResultsContainer, results);
-                },
-                renderLibraryScreen() {
-                    const state = Store.getState();
-                    const playlistsTab = document.getElementById('playlists-tab');
-                    const favoritesTab = document.getElementById('favorites-tab');
-                    const historyTab = document.getElementById('history-tab');
-                    
-                    const playlistsContainer = playlistsTab.querySelector('#create-playlist-btn').nextElementSibling || document.createElement('div');
-                    playlistsContainer.innerHTML = state.playlists.map(p => this.createPlaylistItem(p)).join('');
-                    if (!playlistsTab.contains(playlistsContainer)) playlistsTab.appendChild(playlistsContainer);
-                    this.addPlaylistEventListeners(playlistsContainer);
-                    
-                    favoritesTab.innerHTML = `<div class="library-list">${state.favorites.length > 0 ? state.favorites.map(song => this.createListItem(song, state)).join('') : '<p class="text-neutral-400">No favorites yet.</p>'}</div>`;
-                    const historyContent = historyTab.querySelector('.library-header').nextElementSibling || document.createElement('div');
-                    historyContent.className = 'library-list';
-                    historyContent.innerHTML = `${state.history.length > 0 ? state.history.map(song => this.createListItem(song, state)).join('') : '<p class="text-neutral-400">No playback history.</p>'}`;
-                    if(!historyTab.contains(historyContent)) historyTab.appendChild(historyContent);
-                    
-                    addListEventListeners(favoritesTab.querySelector('.library-list'), state.favorites);
-                    addListEventListeners(historyTab.querySelector('.library-list'), state.history);
-                },
-                createPlaylistItem(playlist) {
-                    const artwork = playlist.songs[0]?.artwork || 'https://placehold.co/100x100/1e1e1e/ffffff?text=♫';
-                    return `<div class="playlist-item flex items-center gap-4 mb-4 cursor-pointer p-2 rounded-lg transition-colors hover:bg-neutral-800" data-playlist-id="${playlist.id}"><img src="${artwork}" class="w-12 h-12 rounded object-cover"><div class="flex-grow overflow-hidden"><div class="font-medium whitespace-nowrap overflow-hidden text-ellipsis">${playlist.name}</div><div class="text-neutral-400 text-sm">${playlist.songs.length} songs</div></div></div>`;
-                },
-                renderPlaylistDetail(playlistId) {
-                    const state = Store.getState();
-                    const playlist = state.playlists.find(p => p.id === playlistId);
-                    if (!playlist) return;
-                    
-                    libraryMainView.classList.add('hidden');
-                    playlistDetailView.classList.remove('hidden');
-                    playlistDetailView.innerHTML = `<button id="back-to-library-btn" class="flex items-center gap-2 mb-4 text-neutral-400"><i class="ph-duotone ph-caret-left"></i> Back to Library</button><div class="flex justify-between items-start mb-6"><div><h1 class="text-3xl font-bold">${playlist.name}</h1><p class="text-neutral-400">${playlist.songs.length} songs</p></div><button id="delete-playlist-btn" data-playlist-id="${playlist.id}" class="text-neutral-400 hover:text-red-500 p-2"><i class="ph-duotone ph-trash text-2xl"></i></button></div><div class="playlist-songs-list">${playlist.songs.length > 0 ? playlist.songs.map(song => this.createListItem(song, state, { isPlaylistView: true, playlistId: playlist.id })).join('') : '<p class="text-neutral-400">This playlist is empty.</p>'}</div>`;
+            // Fix 1: Ensure correct song is selected when clicked
+function playSong(song, songList = null) {
+    // Stop any currently playing song first
+    if (player && typeof player.stopVideo === 'function') {
+        player.stopVideo();
+    }
+    
+    // Set the current song explicitly
+    currentSong = song;
+    currentPlaylist = songList || [song];
+    currentSongIndex = songList ? songList.findIndex(s => s.id === song.id) : 0;
+    
+    // Make sure we're playing the correct song
+    loadSong(song);
+}
 
-                    document.getElementById('back-to-library-btn').addEventListener('click', () => { playlistDetailView.classList.add('hidden'); libraryMainView.classList.remove('hidden'); });
-                    document.getElementById('delete-playlist-btn').addEventListener('click', e => {
-                        Store.deletePlaylist(e.currentTarget.dataset.playlistId);
-                        playlistDetailView.classList.add('hidden'); libraryMainView.classList.remove('hidden'); this.renderLibraryScreen();
-                    });
-                    addListEventListeners(playlistDetailView.querySelector('.playlist-songs-list'), playlist.songs);
-                },
-                openAddToPlaylistModal(song) {
-                    this.songToAdd = song;
-                    modalPlaylistList.innerHTML = Store.getState().playlists.map(p => `<div class="modal-playlist-item p-3 rounded-lg hover:bg-neutral-700 cursor-pointer" data-playlist-id="${p.id}">${p.name}</div>`).join('');
-                    addToPlaylistModal.classList.remove('hidden');
-                },
-                closeAddToPlaylistModal() { this.songToAdd = null; addToPlaylistModal.classList.add('hidden'); },
-                addPlaylistEventListeners(container) {
-                    if(!container) return;
-                    container.addEventListener('click', e => {
-                        const playlistItem = e.target.closest('.playlist-item');
-                        if (playlistItem) this.renderPlaylistDetail(playlistItem.dataset.playlistId);
-                    });
-                }
-            };
-            Store.subscribe(() => { if (!document.getElementById('library-screen').classList.contains('hidden')) UI.renderLibraryScreen(); });
+// Fix 2: Update your click event handler to prevent autoplay conflicts
+function handleSongClick(song) {
+    // Clear any existing autoplay timeout
+    if (autoplayTimeout) {
+        clearTimeout(autoplayTimeout);
+        autoplayTimeout = null;
+    }
+    
+    // Stop current playback
+    if (isPlaying) {
+        pauseCurrentSong();
+    }
+    
+    // Play the selected song
+    playSong(song);
+}
 
-            //==================================================================
-            // #region Event Listeners
-            //==================================================================
-            function setupNav() {
-                navItems.forEach(item => {
-                    item.addEventListener('click', () => {
-                        const targetScreenId = item.dataset.screen;
-                        screens.forEach(screen => screen.classList.add('hidden'));
-                        document.getElementById(targetScreenId).classList.remove('hidden');
-                        
-                        navItems.forEach(nav => nav.classList.remove('text-brand-accent', 'scale-110') || nav.classList.add('text-neutral-400'));
-                        item.classList.add('text-brand-accent', 'scale-110');
-                        item.classList.remove('text-neutral-400');
-                        
-                        if(targetScreenId === 'library-screen') UI.renderLibraryScreen();
-                        if(targetScreenId === 'home-screen') UI.renderHomeScreen();
-                    });
-                });
+// Fix 3: Modify the YouTube player ready function
+function onYouTubeIframeAPIReady() {
+    player = new YT.Player('youtube-player', {
+        height: '0',
+        width: '0',
+        playerVars: {
+            'autoplay': 0,  // Disable autoplay initially
+            'controls': 0,
+            'disablekb': 1,
+            'fs': 0,
+            'iv_load_policy': 3,
+            'modestbranding': 1,
+            'playsinline': 1,
+            'rel': 0
+        },
+        events: {
+            'onReady': function(event) {
+                console.log('YouTube player ready');
+            },
+            'onStateChange': function(event) {
+                handlePlayerStateChange(event);
             }
-            
-            function setupSearch() {
-                let debounceTimer;
-                searchInput.addEventListener('input', () => {
-                    clearTimeout(debounceTimer);
-                    debounceTimer = setTimeout(async () => {
-                        const query = searchInput.value.trim();
-                        if (query.length > 2) {
-                            searchResultsContainer.innerHTML = UI.createSearchSkeletonLoader();
-                            const response = await ApiService.search(query);
-                            
+        }
+    });
+}
 
-                            if (response.error) {
-                                if (response.error === 'api_key_missing') {
-                                    searchResultsContainer.innerHTML = `<p class="text-center text-red-400 p-8">YouTube API Key is missing. Please add a valid key to the script to enable search.</p>`;
-                                } else {
-                                    searchResultsContainer.innerHTML = `<p class="text-center text-red-400 p-8">Could not perform search. Please check your network or API key quota.</p>`;
-                                }
-                            } else {
-                                UI.renderSearchResults(response.results, query);
-                            }
-                        } else {
-                            searchResultsContainer.innerHTML = '<p class="text-center text-neutral-400 p-8">Search for music to get started.</p>';
-                        }
-                    }, 300);
-                });
-            }
-            
-            function addListEventListeners(container, songList) {
-                if(!container) return;
-                container.addEventListener('click', async (e) => {
-                    const findSong = (songId) => songList.find(s => s.id === songId) || Store.getState().playlists.flatMap(p => p.songs).find(s => s.id === songId) || Store.getState().favorites.find(s => s.id === songId) || Store.getState().history.find(s => s.id === songId);
+// Fix 4: Update player state change handler
+function handlePlayerStateChange(event) {
+    const state = event.data;
+    
+    if (state === YT.PlayerState.PLAYING) {
+        isPlaying = true;
+        updatePlayButton();
+        startProgressUpdate();
+    } else if (state === YT.PlayerState.PAUSED) {
+        isPlaying = false;
+        updatePlayButton();
+        stopProgressUpdate();
+    } else if (state === YT.PlayerState.ENDED) {
+        isPlaying = false;
+        updatePlayButton();
+        stopProgressUpdate();
+        
+        // Only auto-advance if user didn't manually select a song
+        if (autoplayEnabled && currentPlaylist && currentPlaylist.length > 1) {
+            setTimeout(() => {
+                playNextSong();
+            }, 1000);
+        }
+    }
+}
 
-                    const favButton = e.target.closest('.favorite-btn');
-                    if(favButton) { e.stopPropagation(); const song = findSong(favButton.dataset.songId); if (song) Store.toggleFavorite(song); return; } 
-                    
-                    const addToPlaylistBtn = e.target.closest('.add-to-playlist-btn');
-                    if(addToPlaylistBtn) { e.stopPropagation(); const song = findSong(addToPlaylistBtn.dataset.songId); if(song) UI.openAddToPlaylistModal(song); return; }
-                    
-                    const removeFromPlaylistBtn = e.target.closest('.remove-from-playlist-btn');
-                    if (removeFromPlaylistBtn) {
-                        e.stopPropagation();
-                        const songId = removeFromPlaylistBtn.dataset.songId, playlistId = removeFromPlaylistBtn.closest('.list-item').dataset.playlistId;
-                        if (window.confirm('Are you sure you want to remove this song?')) { Store.removeSongFromPlaylist(playlistId, songId); UI.renderPlaylistDetail(playlistId); }
-                        return;
-                    }
+// Fix 5: Update your search result click handlers
+document.addEventListener('click', function(e) {
+    // Handle song item clicks
+    if (e.target.closest('.song-item')) {
+        const songItem = e.target.closest('.song-item');
+        const songData = JSON.parse(songItem.dataset.song);
+        
+        // Prevent event bubbling
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Handle the song selection
+        handleSongClick(songData);
+        return;
+    }
+    
+    // Handle play button clicks within song items
+    if (e.target.closest('.play-btn')) {
+        const playBtn = e.target.closest('.play-btn');
+        const songItem = playBtn.closest('.song-item');
+        const songData = JSON.parse(songItem.dataset.song);
+        
+        e.preventDefault();
+        e.stopPropagation();
+        
+        handleSongClick(songData);
+        return;
+    }
+});
 
-                    const songItem = e.target.closest('.list-item');
-                    if (songItem) { 
-                        const song = findSong(songItem.dataset.songId); 
-                        if (song) await Store.playSong(song, songList, true); // Mark as USER INITIATED
-                    }
-                });
-            }
-            
-            function addPlayerEventListeners() {
-                app.querySelector('#mini-player')?.addEventListener('click', e => e.target.closest('#mini-player-play-btn') ? Store.togglePlayPause() : fullPlayerContainer.classList.remove('translate-y-full'));
-                app.querySelector('.down-chevron')?.addEventListener('click', () => fullPlayerContainer.classList.add('translate-y-full'));
-                app.querySelector('#full-player-play-btn')?.addEventListener('click', () => Store.togglePlayPause());
-                app.querySelector('#next-btn')?.addEventListener('click', () => Store.playNext());
-                app.querySelector('#prev-btn')?.addEventListener('click', () => Store.playPrev());
-                app.querySelector('.full-player .favorite-btn')?.addEventListener('click', () => { if(Store.getState().currentlyPlaying) Store.toggleFavorite(Store.getState().currentlyPlaying); });
-                
-                // Autoplay mode toggle
-                app.querySelector('#autoplay-toggle')?.addEventListener('click', () => {
-                    const currentMode = Store.getState().autoplayMode;
-                    const modes = ['smart', 'off'];
-                    const nextMode = modes[(modes.indexOf(currentMode) + 1) % modes.length];
-                    Store.setAutoplayMode(nextMode);
-                });
-                
-                // Fixed progress bar event listener
-                const progressBar = app.querySelector('#progress-bar');
-                if (progressBar) {
-                    progressBar.addEventListener('input', scrubProgressBar);
-                    progressBar.addEventListener('change', scrubProgressBar);
-                }
-            }
-            
-            function setupLibraryTabs() {
-                const tabsContainer = document.querySelector('.tabs');
-                tabsContainer.addEventListener('click', e => {
-                    if (e.target.classList.contains('tab-btn')) {
-                        tabsContainer.querySelector('.active').classList.remove('active', 'border-brand-accent', 'text-white') || tabsContainer.querySelector('.active').classList.add('border-transparent', 'text-neutral-400');
-                        e.target.classList.add('active', 'border-brand-accent', 'text-white'); e.target.classList.remove('border-transparent', 'text-neutral-400');
-                        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-                        document.getElementById(`${e.target.dataset.tab}-tab`).classList.remove('hidden');
-                        playlistDetailView.classList.add('hidden'); libraryMainView.classList.remove('hidden');
-                    }
-                });
-                document.getElementById('clear-history-btn').addEventListener('click', () => { 
-                    if (window.confirm('Are you sure you want to clear your playback history?')) {
-                        Store.clearHistory();
-                        Store.resetSmartAutoplay(); // Also reset smart autoplay memory
-                    }
-                });
-                document.getElementById('create-playlist-btn').addEventListener('click', () => { const name = prompt('Enter a name for your new playlist:'); if (name) Store.createPlaylist(name); });
-            }
+// Fix 6: Make sure loadSong function loads the correct song
+function loadSong(song) {
+    if (!player || !song || !song.id) {
+        console.error('Player not ready or invalid song data');
+        return;
+    }
+    
+    try {
+        // Extract video ID from YouTube URL or use direct ID
+        const videoId = extractVideoId(song.id);
+        
+        if (!videoId) {
+            console.error('Invalid video ID:', song.id);
+            return;
+        }
+        
+        // Load and play the specific video
+        player.loadVideoById({
+            videoId: videoId,
+            startSeconds: 0
+        });
+        
+        // Update UI
+        updateCurrentSongInfo(song);
+        showMiniPlayer();
+        
+    } catch (error) {
+        console.error('Error loading song:', error);
+    }
+}
 
-            function setupPlaylistModal() {
-                document.getElementById('modal-close-btn').addEventListener('click', () => UI.closeAddToPlaylistModal());
-                document.getElementById('modal-new-playlist-btn').addEventListener('click', () => {
-                    const name = prompt('Enter a name for your new playlist:');
-                    if (name) {
-                        Store.createPlaylist(name);
-                        if (UI.songToAdd) { const newPlaylist = Store.getState().playlists[0]; Store.addSongToPlaylist(newPlaylist.id, UI.songToAdd); }
-                        UI.closeAddToPlaylistModal();
-                    }
-                });
-                modalPlaylistList.addEventListener('click', e => {
-                    const item = e.target.closest('.modal-playlist-item');
-                    if (item && UI.songToAdd) { Store.addSongToPlaylist(item.dataset.playlistId, UI.songToAdd); UI.closeAddToPlaylistModal(); }
-                });
-            }
-            
-            //==================================================================
+// Fix 7: Helper function to extract video ID
+function extractVideoId(url) {
+    if (!url) return null;
+    
+    // If it's already just an ID
+    if (url.length === 11 && !url.includes('/')) {
+        return url;
+    }
+    
+    // Extract from various YouTube URL formats
+    const regexes = [
+        /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+        /^([a-zA-Z0-9_-]{11})$/
+    ];
+    
+    for (const regex of regexes) {
+        const match = url.match(regex);
+        if (match) return match[1];
+    }
+    
+    return null;
+}
+
+//==================================================================
             // #region App Initialization
             //==================================================================
             function getGreeting() {
