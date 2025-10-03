@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Player</title>
+    <script src="https://cdn-tailwindcss.vercel.app/"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1f1f1f;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4f4f4f;
+            border-radius: 10px;
+        }
+        /* Player screen slide-up animation */
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .animate-slide-up {
+            animation: slideUp 0.3s ease-out forwards;
+        }
+         /* Custom range slider style */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            background: #4a4a4a;
+            border-radius: 5px;
+            outline: none;
+            transition: opacity .2s;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #1DB954; /* Neon green accent */
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid #121212;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: #1DB954;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid #121212;
+        }
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 5px solid #FFF;
+            border-bottom-color: #1DB954;
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-black text-white font-['Inter'] antialiased">
+
+    <div id="app" class="relative min-h-screen pb-24">
+
+        <!-- Home Screen -->
+        <main id="home-screen" class="p-6">
+            <header class="mb-8">
+                <h1 class="text-3xl font-bold">Hello, Ayush 🎶</h1>
+            </header>
+            
+            <div class="relative">
+                <input id="search-input" type="text" placeholder="Search for songs or artists on YouTube..." class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 pl-10 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all">
+                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            </div>
+            
+            <section id="search-results-section" class="mt-8 hidden">
+                <h2 class="text-xl font-semibold mb-4">Search Results</h2>
+                <div id="search-results-list" class="space-y-3">
+                    <!-- Search results will be dynamically inserted here -->
+                </div>
+            </section>
+        </main>
+
+        <!-- My Music Screen -->
+        <main id="my-music-screen" class="p-6 hidden">
+            <h1 class="text-3xl font-bold mb-8">My Music</h1>
+
+            <!-- Saved Music Section -->
+            <section id="saved-music-section" class="mb-8">
+                <h2 class="text-xl font-semibold mb-4">Saved Music</h2>
+                <div id="saved-music-list" class="space-y-3">
+                    <!-- Saved music tracks will be dynamically inserted here -->
+                </div>
+            </section>
+
+            <!-- Favorites Section -->
+            <section id="favorites-section" class="mb-8">
+                <h2 class="text-xl font-semibold mb-4">Favorites</h2>
+                <div id="favorites-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                     <!-- Favorite songs will be dynamically inserted here -->
+                </div>
+            </section>
+
+            <!-- Playlists Section -->
+            <section id="playlists-section">
+                <h2 class="text-xl font-semibold mb-4">Playlists</h2>
+                <div id="playlists-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <!-- Playlists will be dynamically inserted here -->
+                </div>
+            </section>
+        </main>
+        
+        <!-- Bottom Navigation -->
+        <nav class="fixed bottom-0 left-0 right-0 bg-gray-900/80 backdrop-blur-sm border-t border-gray-800 flex justify-around">
+            <button data-tab="home-screen" class="nav-btn text-green-500 flex-1 flex flex-col items-center p-3 transition-colors duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                <span class="text-xs mt-1">Home</span>
+            </button>
+            <button data-tab="my-music-screen" class="nav-btn text-gray-400 flex-1 flex flex-col items-center p-3 transition-colors duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 6l12-3"/></svg>
+                <span class="text-xs mt-1">My Music</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Full Screen Player -->
+    <div id="player-screen" class="fixed inset-0 bg-black z-50 transform translate-y-full transition-transform duration-300 ease-out">
+        <div class="relative w-full h-full flex flex-col p-6">
+            <!-- Header with close button -->
+            <header class="flex justify-between items-center mb-8">
+                <div></div> <!-- Spacer -->
+                <h2 class="text-lg font-semibold text-gray-300">Now Playing</h2>
+                <button id="close-player-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                </button>
+            </header>
+            
+            <!-- Album Art -->
+            <div class="flex-shrink-0 px-4">
+                <img id="player-album-art" src="https://placehold.co/500x500/121212/1DB954?text=Music" alt="Album Art" class="w-full aspect-square rounded-xl shadow-2xl shadow-green-500/20">
+            </div>
+
+            <!-- Song Info -->
+            <div class="text-center mt-8">
+                <h3 id="player-song-title" class="text-2xl font-bold">Song Title</h3>
+                <p id="player-artist-name" class="text-gray-400">Artist Name</p>
+            </div>
+
+            <!-- Progress Slider -->
+            <div class="mt-8">
+                <input id="progress-slider" type="range" min="0" max="100" value="0" class="w-full">
+                <div class="flex justify-between text-xs text-gray-400 mt-2">
+                    <span id="current-time">0:00</span>
+                    <span id="total-duration">0:00</span>
+                </div>
+            </div>
+
+            <!-- Playback Controls -->
+            <div class="flex justify-around items-center mt-8">
+                <button id="shuffle-btn" class="text-gray-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" transform="rotate(90 12 12) translate(0 1)"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" transform="rotate(90 12 12) translate(0 -1)"/></svg>
+                </button>
+                <button id="prev-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="currentColor" viewBox="0 0 20 20"><path d="M8.445 14.832A1 1 0 0010 14.015V5.985a1 1 0 00-1.555-.817L4.126 9.183a1 1 0 000 1.634l4.319 4.015zM12.445 14.832A1 1 0 0014 14.015V5.985a1 1 0 00-1.555-.817l-4.319 4.015a1 1 0 000 1.634l4.319 4.015z"/></svg>
+                </button>
+                <button id="play-pause-btn" class="bg-green-500 text-black rounded-full p-5 shadow-lg shadow-green-500/50">
+                    <!-- Play/Pause Icon -->
+                </button>
+                <button id="next-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="currentColor" viewBox="0 0 20 20"><path d="M11.555 5.168A1 1 0 0010 5.985v8.03a1 1 0 001.555.817l4.319-4.015a1 1 0 000-1.634l-4.319-4.015zM7.555 5.168A1 1 0 006 5.985v8.03a1 1 0 001.555.817l4.319-4.015a1 1 0 000-1.634l-4.319-4.015z"/></svg>
+                </button>
+                <button id="repeat-btn" class="text-gray-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 9a9 9 0 0114.13-6.36M20 15a9 9 0 01-14.13 6.36"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+
+    <script src="app.js">
+        
+    </script>
+</body>
+</html>
+
