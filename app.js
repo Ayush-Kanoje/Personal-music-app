@@ -47,8 +47,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const searchResultsList = document.getElementById('search-results-list');
 
             // --- ICONS ---
-            const playIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8.188v3.624a1 1 0 001.555.816l3.066-1.812a1 1 0 000-1.632L9.555 7.168z" clip-rule="evenodd" /></svg>`;
-            const pauseIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>`;
+            const playIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 sm:h-8 sm:w-8" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8.188v3.624a1 1 0 001.555.816l3.066-1.812a1 1 0 000-1.632L9.555 7.168z" clip-rule="evenodd" /></svg>`;
+            const pauseIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 sm:h-8 sm:w-8" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>`;
             
             // --- YOUTUBE API FUNCTIONS ---
             async function searchYouTubeVideos(query, maxResults = 6) {
@@ -121,21 +121,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 listEl.innerHTML = '';
                 songs.forEach((song, index) => {
                     const songEl = document.createElement('div');
-                    songEl.className = 'flex items-center space-x-4 p-2 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer';
+                    songEl.className = 'search-result-item flex items-center space-x-3 sm:space-x-4 p-3 rounded-xl border border-gray-800 hover:border-gray-700 bg-gradient-to-r from-gray-900/50 to-gray-800/30 backdrop-blur-sm cursor-pointer mobile-touch-target';
                     songEl.innerHTML = `
-                        <img src="${song.cover}" alt="${song.title}" class="w-12 h-12 rounded-md">
-                        <div class="flex-1">
-                            <p class="font-semibold">${song.title}</p>
-                            <p class="text-sm text-gray-400">${song.artist}</p>
+                        <img src="${song.cover}" alt="${song.title}" class="w-12 h-12 sm:w-14 sm:h-14 rounded-lg shadow-md">
+                        <div class="flex-1 min-w-0">
+                            <p class="font-semibold text-sm sm:text-base truncate">${song.title}</p>
+                            <p class="text-xs sm:text-sm text-gray-400 truncate">${song.artist}</p>
+                            <p class="text-xs text-gray-500">${formatTime(song.duration)}</p>
                         </div>
-                        <button class="play-song-btn p-2 rounded-full hover:bg-gray-700">
-                           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8.188v3.624a1 1 0 001.555.816l3.066-1.812a1 1 0 000-1.632L9.555 7.168z" clip-rule="evenodd" /></svg>
-                        </button>
+                        <div class="flex items-center space-x-2">
+                            <button class="favorite-btn p-2 rounded-full hover:bg-gray-700/50 transition-colors ${song.isFavorite ? 'text-red-500' : 'text-gray-400'}">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <button class="play-song-btn p-2 rounded-full hover:bg-green-600/20 transition-colors group">
+                                <svg class="w-5 h-5 sm:w-6 sm:h-6 text-green-500 group-hover:text-green-400 transition-colors" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8.188v3.624a1 1 0 001.555.816l3.066-1.812a1 1 0 000-1.632L9.555 7.168z" clip-rule="evenodd" /></svg>
+                            </button>
+                        </div>
                     `;
-                    songEl.addEventListener('click', () => {
-                        loadSong(index);
-                        playSong();
-                        openPlayer();
+                    songEl.addEventListener('click', (e) => {
+                        if (!e.target.closest('.favorite-btn') && !e.target.closest('.play-song-btn')) {
+                            loadSong(index);
+                            playSong();
+                            openPlayer();
+                        }
                     });
                     listEl.appendChild(songEl);
                 });
@@ -287,10 +295,12 @@ document.addEventListener('DOMContentLoaded', () => {
             // --- PLAYER UI ---
             function openPlayer() {
                 playerScreen.classList.remove('translate-y-full');
+                preventBodyScroll();
             }
 
             function closePlayer() {
                 playerScreen.classList.add('translate-y-full');
+                restoreBodyScroll();
             }
             
             // --- SEARCH LOGIC ---
@@ -421,41 +431,73 @@ document.addEventListener('DOMContentLoaded', () => {
 
             function renderSingleSearchResult(song, index, isYouTubeResult) {
                 const songEl = document.createElement('div');
-                songEl.className = 'flex items-center space-x-4 p-2 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer mb-2';
+                songEl.className = 'search-result-item flex items-center space-x-3 sm:space-x-4 p-3 rounded-xl border border-gray-800 hover:border-gray-700 bg-gradient-to-r from-gray-900/50 to-gray-800/30 backdrop-blur-sm cursor-pointer mobile-touch-target';
                 
                 const youtubeIcon = isYouTubeResult ? `
-                    <svg class="w-4 h-4 text-red-500 ml-2" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    <div class="flex items-center space-x-1">
+                        <svg class="w-3 h-3 sm:w-4 sm:h-4 text-red-500" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                     </svg>
-                ` : '';
+                    <span class="text-xs text-red-400 hidden sm:inline">YouTube</span>
+                ` : `
+                    <div class="flex items-center space-x-1">
+                        <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span class="text-xs text-green-400 hidden sm:inline">Local</span>
+                    </div>
+                `;
                 
                 songEl.innerHTML = `
-                    <img src="${song.cover}" alt="${song.title}" class="w-12 h-12 rounded-md">
-                    <div class="flex-1">
-                        <div class="flex items-center">
-                            <p class="font-semibold truncate">${song.title}</p>
+                    <img src="${song.cover}" alt="${song.title}" class="w-12 h-12 sm:w-14 sm:h-14 rounded-lg shadow-md">
+                    <div class="flex-1 min-w-0">
+                        <p class="font-semibold text-sm sm:text-base truncate">${song.title}</p>
+                        <p class="text-xs sm:text-sm text-gray-400 truncate">${song.artist}</p>
+                        <div class="flex items-center justify-between mt-1">
                             ${youtubeIcon}
+                            ${song.duration ? `<span class="text-xs text-gray-500">${formatTime(song.duration)}</span>` : ''}
                         </div>
-                        <p class="text-sm text-gray-400 truncate">${song.artist}</p>
                     </div>
-                     <button class="play-song-btn p-2 rounded-full hover:bg-gray-700">
-                       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8.188v3.624a1 1 0 001.555.816l3.066-1.812a1 1 0 000-1.632L9.555 7.168z" clip-rule="evenodd" /></svg>
-                    </button>
+                    <div class="flex items-center space-x-2">
+                        ${!isYouTubeResult ? `
+                            <button class="favorite-btn p-2 rounded-full hover:bg-gray-700/50 transition-colors ${song.isFavorite ? 'text-red-500' : 'text-gray-400'}">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" /></svg>
+                            </button>
+                        ` : ''}
+                        <button class="play-song-btn p-2 rounded-full hover:bg-green-600/20 transition-colors group">
+                            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-green-500 group-hover:text-green-400 transition-colors" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8.188v3.624a1 1 0 001.555.816l3.066-1.812a1 1 0 000-1.632L9.555 7.168z" clip-rule="evenodd" /></svg>
+                        </button>
+                    </div>
                 `;
-                songEl.addEventListener('click', () => {
-                    if (isYouTubeResult) {
-                        loadSong(index, true);
-                        openPlayer();
-                    } else {
-                        const originalIndex = songs.findIndex(s => s.id === song.id);
-                        if (originalIndex !== -1) {
-                            loadSong(originalIndex);
-                            playSong();
+                
+                songEl.addEventListener('click', (e) => {
+                    if (!e.target.closest('.favorite-btn') && !e.target.closest('.play-song-btn')) {
+                        if (isYouTubeResult) {
+                            loadSong(index, true);
                             openPlayer();
+                        } else {
+                            const originalIndex = songs.findIndex(s => s.id === song.id);
+                            if (originalIndex !== -1) {
+                                loadSong(originalIndex);
+                                playSong();
+                                openPlayer();
+                            }
                         }
                     }
                 });
+                
                 searchResultsList.appendChild(songEl);
+            }
+
+            // --- MOBILE OPTIMIZATION FUNCTIONS ---
+            function preventBodyScroll() {
+                document.body.style.overflow = 'hidden';
+                document.body.style.position = 'fixed';
+                document.body.style.width = '100%';
+            }
+
+            function restoreBodyScroll() {
+                document.body.style.overflow = '';
+                document.body.style.position = '';
+                document.body.style.width = '';
             }
 
             // --- EVENT LISTENERS ---
@@ -464,31 +506,107 @@ document.addEventListener('DOMContentLoaded', () => {
             prevBtn.addEventListener('click', prevSong);
             closePlayerBtn.addEventListener('click', closePlayer);
             
-            shuffleBtn.addEventListener('click', () => {
-                isShuffle = !isShuffle;
-                shuffleBtn.classList.toggle('text-green-500', isShuffle);
-                shuffleBtn.classList.toggle('text-gray-400', !isShuffle);
+            // Close player on swipe down (mobile)
+            let startY = 0;
+            let currentY = 0;
+            let isDragging = false;
+            
+            playerScreen.addEventListener('touchstart', (e) => {
+                startY = e.touches[0].clientY;
+                isDragging = true;
             });
             
-            repeatBtn.addEventListener('click', () => {
-                isRepeat = !isRepeat;
-                repeatBtn.classList.toggle('text-green-500', isRepeat);
-                repeatBtn.classList.toggle('text-gray-400', !isRepeat);
-            });
-
-            audio.addEventListener('timeupdate', updateProgress);
-            audio.addEventListener('ended', () => {
-                if (isRepeat) {
-                    playSong();
-                } else {
-                    nextSong();
+            playerScreen.addEventListener('touchmove', (e) => {
+                if (!isDragging) return;
+                currentY = e.touches[0].clientY;
+                const deltaY = currentY - startY;
+                
+                if (deltaY > 0 && deltaY < 200) {
+                    playerScreen.style.transform = `translateY(${deltaY}px)`;
                 }
             });
-            progressSlider.addEventListener('input', (e) => {
-                 const duration = audio.duration;
-                 if(duration) {
-                     audio.currentTime = (e.target.value / 100) * duration;
-                 }
+            
+            playerScreen.addEventListener('touchend', () => {
+                if (!isDragging) return;
+                isDragging = false;
+                
+                const deltaY = currentY - startY;
+                if (deltaY > 100) {
+                    closePlayer();
+                } else {
+                    playerScreen.style.transform = 'translateY(0)';
+                }
+            });
+
+            // Enhanced search function with better mobile UX
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                const query = e.target.value.trim();
+
+                if (!query) {
+                    searchResultsSection.classList.add('hidden');
+                    return;
+                }
+                
+                searchResultsSection.classList.remove('hidden');
+                searchResultsList.innerHTML = `
+                    <div class="flex justify-center items-center p-8">
+                        <div class="text-center">
+                            <span class="loader"></span>
+                            <p class="text-gray-400 mt-4 text-sm">Searching...</p>
+                        </div>
+                    </div>
+                `;
+
+                searchTimeout = setTimeout(async () => {
+                    const results = await searchSongs(query);
+                    const localResults = results.filter(r => !r.isYouTube);
+                    const youtubeResults = results.filter(r => r.isYouTube);
+                    
+                    searchResultsList.innerHTML = '';
+                    
+                    if (localResults.length > 0) {
+                        const localHeader = document.createElement('div');
+                        localHeader.className = 'flex items-center space-x-2 mb-3 mt-4';
+                        localHeader.innerHTML = `
+                            <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                            <h3 class="text-base sm:text-lg font-semibold text-green-500">Your Library</h3>
+                        `;
+                        searchResultsList.appendChild(localHeader);
+                        
+                        localResults.forEach((song, index) => {
+                            renderSingleSearchResult(song, index, false);
+                        });
+                    }
+                    
+                    if (youtubeResults.length > 0) {
+                        const youtubeHeader = document.createElement('div');
+                        youtubeHeader.className = 'flex items-center space-x-2 mb-3 mt-6';
+                        youtubeHeader.innerHTML = `
+                            <svg class="w-5 h-5 text-red-500" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                            </svg>
+                            <h3 class="text-base sm:text-lg font-semibold text-red-500">YouTube Music</h3>
+                        `;
+                        searchResultsList.appendChild(youtubeHeader);
+                        
+                        youtubeResults.forEach((song, index) => {
+                            renderSingleSearchResult(song, index, true);
+                        });
+                    }
+                    
+                    if (results.length === 0) {
+                        searchResultsList.innerHTML = `
+                            <div class="text-center p-8">
+                                <svg class="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.236 0-4.236-.643-5.97-1.756M6.343 14.343L4.93 12.93A8.963 8.963 0 013 8a8.963 8.963 0 011.93-5.657l1.414 1.414" />
+                                </svg>
+                                <p class="text-gray-400 text-lg font-medium">No results found</p>
+                                <p class="text-gray-500 text-sm mt-2">Try searching with different keywords</p>
+                            </div>
+                        `;
+                    }
+                }, 500);
             });
 
             // --- INITIALIZATION ---
